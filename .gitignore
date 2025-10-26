@@ -1,2 +1,32 @@
 /docs
 /labs
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Type checkers
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Linters
+.ruff_cache/
+
+# pytest
+.pytest_cache/
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
