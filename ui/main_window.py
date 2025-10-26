@@ -1,7 +1,9 @@
 import pyqtgraph as pg
 from PyQt6.QtCore import QTimer
+from PyQt6.QtGui import QCloseEvent
 from PyQt6.QtWidgets import (
     QButtonGroup,
+    QDoubleSpinBox,
     QGroupBox,
     QHBoxLayout,
     QMainWindow,
@@ -27,7 +29,7 @@ class MainWindow(QMainWindow):
         self.simulation = SimulationEngine(self.neuron)
         self.is_running = False
 
-        self.param_spinboxes = {}
+        self.param_spinboxes: dict[str, QDoubleSpinBox] = {}
 
         self.setup_ui()
         self.setup_timer()
@@ -61,14 +63,13 @@ class MainWindow(QMainWindow):
         control_layout = QVBoxLayout()
 
         self.model_params = ParameterPanel("Model Parameters")
-        params = [
-            ("a", "a", 0.02, 0.001, 0.5, 0.001),
-            ("b", "b", 0.2, 0.0, 1.0, 0.01),
+        params: list[tuple[str, str, float, float, float, float, int]] = [
+            ("a", "a", 0.02, 0.001, 0.5, 0.001, 3),
+            ("b", "b", 0.2, 0.0, 1.0, 0.01, 3),
             ("c", "c", -65.0, -80.0, -40.0, 1.0, 1),
             ("d", "d", 8.0, 0.0, 20.0, 0.5, 1),
         ]
-        for name, label, value, min_v, max_v, step, *decimals in params:
-            decimals = decimals[0] if decimals else 3
+        for name, label, value, min_v, max_v, step, decimals in params:
             spinbox = self.model_params.add_parameter(name, label, value, min_v, max_v, step, decimals)
             spinbox.valueChanged.connect(self.on_param_changed)
             self.param_spinboxes[name] = spinbox
@@ -93,7 +94,7 @@ class MainWindow(QMainWindow):
             radio_btn = QRadioButton(name)
             self.preset_buttons.addButton(radio_btn, id=index)
             presets_layout.addWidget(radio_btn)
-            radio_btn.toggled.connect(lambda checked, p=preset: checked and self.load_preset(p))
+            radio_btn.toggled.connect(lambda checked, p=preset: self.load_preset(p) if checked else None)
 
         first_button = self.preset_buttons.button(0)
         if first_button:
@@ -124,7 +125,7 @@ class MainWindow(QMainWindow):
         main_layout.addLayout(graph_layout, 3)
         main_layout.addLayout(control_layout, 1)
 
-    def on_param_changed(self):
+    def on_param_changed(self) -> None:
         if not self.is_running:
             self.apply_parameters()
 
@@ -155,17 +156,17 @@ class MainWindow(QMainWindow):
         input_current = self.param_spinboxes["I"].value()
         self.simulation.update(input_current)
 
-        max_points = 1000
-        time_arr = self.simulation.get_time_array()[-max_points:]
-        voltage_arr = self.simulation.get_voltage_array()[-max_points:]
-        recovery_arr = self.simulation.get_recovery_array()[-max_points:]
+        time_arr = self.simulation.get_time_array()
+        voltage_arr = self.simulation.get_voltage_array()
+        recovery_arr = self.simulation.get_recovery_array()
 
         self.voltage_curve.setData(time_arr, voltage_arr)
         self.recovery_curve.setData(time_arr, recovery_arr)
 
         if len(time_arr) > 0:
             max_time = time_arr[-1]
-            x_min = max(0, max_time - 1500)
+            window_size = 1500
+            x_min = max(0, max_time - window_size)
             self.voltage_plot.setXRange(x_min, max_time)
             self.recovery_plot.setXRange(x_min, max_time)
 
@@ -187,3 +188,14 @@ class MainWindow(QMainWindow):
         for param in ("a", "b", "c", "d"):
             self.param_spinboxes[param].setValue(preset[param])
         self.apply_parameters()
+
+    def closeEvent(self, event: QCloseEvent | None) -> None:  # noqa: N802
+        if event is None:
+            return
+
+        if self.is_running:
+            self.timer.stop()
+            self.is_running = False
+
+        self.simulation.reset()
+        event.accept()

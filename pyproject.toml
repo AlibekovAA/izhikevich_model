@@ -6,10 +6,11 @@ target-version = "py313"
 select = ["E", "F", "W", "I", "N", "UP"]
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.11"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
+disallow_untyped_defs = true
 
 [[tool.mypy.overrides]]
 module = "pyqtgraph.*"

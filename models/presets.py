@@ -8,5 +8,5 @@ class NeuronPresets(Enum):
     CHATTERING = {"a": 0.02, "b": 0.2, "c": -50.0, "d": 2.0}
     LOW_THRESHOLD = {"a": 0.02, "b": 0.25, "c": -65.0, "d": 2.0}
 
-    def parameters(self):
+    def parameters(self) -> dict[str, float]:
         return self.value
