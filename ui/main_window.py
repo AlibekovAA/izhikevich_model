@@ -57,8 +57,18 @@ class MainWindow(QMainWindow):
         self.recovery_plot.addLegend()
         self.recovery_curve = self.recovery_plot.plot(pen=pg.mkPen("yellow", width=2), name="Recovery (u)")
 
+        self.phase_plot = pg.PlotWidget(title="Phase Portrait (u-v)")
+        self.phase_plot.setLabel("left", "u")
+        self.phase_plot.setLabel("bottom", "v (mV)")
+        self.phase_plot.setYRange(-20, 20)
+        self.phase_plot.setXRange(-80, -30)
+        self.phase_plot.showGrid(x=True, y=True)
+        self.phase_plot.addLegend()
+        self.phase_curve = self.phase_plot.plot(pen=pg.mkPen("red", width=2), name="Phase Trajectory")
+
         graph_layout.addWidget(self.voltage_plot)
         graph_layout.addWidget(self.recovery_plot)
+        graph_layout.addWidget(self.phase_plot)
 
         control_layout = QVBoxLayout()
 
@@ -162,6 +172,7 @@ class MainWindow(QMainWindow):
 
         self.voltage_curve.setData(time_arr, voltage_arr)
         self.recovery_curve.setData(time_arr, recovery_arr)
+        self.phase_curve.setData(voltage_arr, recovery_arr)
 
         if len(time_arr) > 0:
             max_time = time_arr[-1]
@@ -181,6 +192,7 @@ class MainWindow(QMainWindow):
         self.simulation.reset()
         self.voltage_curve.setData([], [])
         self.recovery_curve.setData([], [])
+        self.phase_curve.setData([], [])
         if was_running:
             self.toggle_simulation()
 
